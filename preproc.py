@@ -61,7 +61,22 @@ def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
     data['day-of-year'] = data['OCCUPANCY_DATE'].dt.dayofyear
     data['month'] = data['OCCUPANCY_DATE'].dt.month
     data['quarter'] = data['OCCUPANCY_DATE'].dt.quarter
-    data['year'] = data['OCCUPANCY_DATE'].dt.year
+    # data['year'] = data['OCCUPANCY_DATE'].dt.year
 
     return data
 
+
+def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
+
+    data_agg_by_day = data.groupby('OCCUPANCY_DATE').agg({'OCCUPANCY_RATE_BEDS': 'sum',
+                                                            'Max Temp (°C)': 'max',
+                                                            'Min Temp (°C)': 'min',
+                                                            'Total Precip (mm)': 'mean',
+                                                            'day-of-week': 'mean',
+                                                            'day-of-year': 'mean',
+                                                            'month': 'mean',
+                                                            'quarter': 'mean',
+                                                            # 'year': 'mean'
+                                                            })
+
+    return data_agg_by_day
