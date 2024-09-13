@@ -2,7 +2,6 @@ import pandas as pd
 
 def combine_data() -> pd.DataFrame:
 
-
     # read the shelter data
     data_22 = pd.read_csv('./data/daily-shelter-overnight-service-occupancy-capacity-2022.csv')
     print(data_22.shape)
@@ -33,7 +32,6 @@ def combine_data() -> pd.DataFrame:
     return full_data
 
 
-
 def split_train_test(full_data: pd.DataFrame,
                     city: str = "Toronto") -> (pd.DataFrame, pd.DataFrame):
 
@@ -55,17 +53,6 @@ def split_train_test(full_data: pd.DataFrame,
     return train_data, test_data
 
 
-def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
-
-    data['day-of-week'] = data['OCCUPANCY_DATE'].dt.dayofweek
-    data['day-of-year'] = data['OCCUPANCY_DATE'].dt.dayofyear
-    data['month'] = data['OCCUPANCY_DATE'].dt.month
-    data['quarter'] = data['OCCUPANCY_DATE'].dt.quarter
-    # data['year'] = data['OCCUPANCY_DATE'].dt.year
-
-    return data
-
-
 def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
 
     data_agg_by_day = data.groupby('OCCUPANCY_DATE').agg({'OCCUPANCY_RATE_BEDS': 'sum',
@@ -80,3 +67,14 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
                                                             })
 
     return data_agg_by_day
+
+
+def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
+
+    data['day-of-week'] = data['OCCUPANCY_DATE'].dt.dayofweek
+    data['day-of-year'] = data['OCCUPANCY_DATE'].dt.dayofyear
+    data['month'] = data['OCCUPANCY_DATE'].dt.month
+    data['quarter'] = data['OCCUPANCY_DATE'].dt.quarter
+    # data['year'] = data['OCCUPANCY_DATE'].dt.year
+
+    return data
