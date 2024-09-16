@@ -33,6 +33,7 @@ def combine_data() -> pd.DataFrame:
 
 
 def split_train_test(full_data: pd.DataFrame,
+                    split_date: str,
                     city: str = "Toronto") -> (pd.DataFrame, pd.DataFrame):
 
     # keep only those weather features:
@@ -43,8 +44,8 @@ def split_train_test(full_data: pd.DataFrame,
     city_filter = full_data['LOCATION_CITY'] == city
 
     # split into train and test data
-    train_date_filter = full_data['OCCUPANCY_DATE'] < '2024-01-01'
-    test_date_filter = full_data['OCCUPANCY_DATE'] >= '2024-01-01'
+    train_date_filter = full_data['OCCUPANCY_DATE'] < split_date
+    test_date_filter = full_data['OCCUPANCY_DATE'] >= split_date
 
     train_data = full_data[['OCCUPANCY_DATE', 'OCCUPANCY_RATE_BEDS']+weather_features][city_filter & train_date_filter]
     test_data = full_data[['OCCUPANCY_DATE', 'OCCUPANCY_RATE_BEDS']+weather_features][city_filter & test_date_filter]
@@ -58,6 +59,7 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
     data_agg_by_day = data.groupby('OCCUPANCY_DATE').agg({'OCCUPANCY_RATE_BEDS': 'sum',
                                                             'Max Temp (°C)': 'max',
                                                             'Min Temp (°C)': 'min',
+                                                            'Mean Temp (°C)',
                                                             'Total Precip (mm)': 'mean',
                                                             'day-of-week': 'mean',
                                                             'day-of-year': 'mean',
