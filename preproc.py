@@ -37,7 +37,7 @@ def split_train_test(full_data: pd.DataFrame,
                     city: str = "Toronto") -> (pd.DataFrame, pd.DataFrame):
 
     # keep only those weather features:
-    weather_features = ['Max Temp (°C)', 'Min Temp (°C)', 'Total Precip (mm)']
+    weather_features = ['Max Temp (°C)', 'Min Temp (°C)', 'Mean Temp (°C)', 'Total Precip (mm)']
     # weather_data = weather_data[weather_features+['OCCUPANCY_DATE']]
 
     # select the city
