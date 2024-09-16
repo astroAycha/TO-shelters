@@ -59,7 +59,7 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
     data_agg_by_day = data.groupby('OCCUPANCY_DATE').agg({'OCCUPANCY_RATE_BEDS': 'sum',
                                                             'Max Temp (°C)': 'max',
                                                             'Min Temp (°C)': 'min',
-                                                            'Mean Temp (°C)',
+                                                            'Mean Temp (°C)': 'mean',
                                                             'Total Precip (mm)': 'mean',
                                                             'day-of-week': 'mean',
                                                             'day-of-year': 'mean',
