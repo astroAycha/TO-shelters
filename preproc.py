@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def combine_data() -> pd.DataFrame:
 
@@ -54,6 +55,25 @@ def split_train_test(full_data: pd.DataFrame,
     return train_data, test_data
 
 
+def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
+
+    data['day-of-week'] = data['OCCUPANCY_DATE'].dt.dayofweek
+    data["weekend"] = data['OCCUPANCY_DATE'].dt.dayofweek.isin([5,6])
+    data['day-of-year'] = data['OCCUPANCY_DATE'].dt.dayofyear
+    data['month'] = data['OCCUPANCY_DATE'].dt.month
+    data['quarter'] = data['OCCUPANCY_DATE'].dt.quarter
+    # data['year'] = data['OCCUPANCY_DATE'].dt.year
+
+    data["day_x"] = np.sin(np.radians((360/7) * data['day-of-week']))
+    data["day_y"] = np.cos(np.radians((360/7) * data['day-of-week']))
+    data["month_x"] = np.sin(np.radians((360/12) * data['month']))
+    data["month_y"] = np.cos(np.radians((360/12) * data['month']))
+    data['quarter_x'] = np.sin(np.radians((360/4) * data['quarter']))
+    data['quarter_y'] = np.cos(np.radians((360/4) * data['quarter']))
+
+    return data
+
+
 def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
 
     data_agg_by_day = data.groupby('OCCUPANCY_DATE').agg({'OCCUPANCY_RATE_BEDS': 'sum',
@@ -61,22 +81,18 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
                                                             'Min Temp (°C)': 'min',
                                                             'Mean Temp (°C)': 'mean',
                                                             'Total Precip (mm)': 'mean',
-                                                            'day-of-week': 'mean',
-                                                            'day-of-year': 'mean',
-                                                            'month': 'mean',
-                                                            'quarter': 'mean',
+                                                            # 'day-of-week': 'mean',
+                                                            'day_x': 'mean',
+                                                            'day_y': 'mean',
+                                                            'weekend': 'mean',
+                                                            'month_x': 'mean',
+                                                            'month_y': 'mean',
+                                                            # 'day-of-year': 'mean',
+                                                            'quarter_x': 'mean',
+                                                            'quarter_y': 'mean'
+                                                            # 'month': 'mean',
+                                                            # 'quarter': 'mean',
                                                             # 'year': 'mean'
                                                             })
 
     return data_agg_by_day
-
-
-def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
-
-    data['day-of-week'] = data['OCCUPANCY_DATE'].dt.dayofweek
-    data['day-of-year'] = data['OCCUPANCY_DATE'].dt.dayofyear
-    data['month'] = data['OCCUPANCY_DATE'].dt.month
-    data['quarter'] = data['OCCUPANCY_DATE'].dt.quarter
-    # data['year'] = data['OCCUPANCY_DATE'].dt.year
-
-    return data
