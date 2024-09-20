@@ -62,7 +62,7 @@ def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
     data['day-of-year'] = data['OCCUPANCY_DATE'].dt.dayofyear
     data['month'] = data['OCCUPANCY_DATE'].dt.month
     data['quarter'] = data['OCCUPANCY_DATE'].dt.quarter
-    # data['year'] = data['OCCUPANCY_DATE'].dt.year
+    data['year'] = data['OCCUPANCY_DATE'].dt.year
 
     data["day_x"] = np.sin(np.radians((360/7) * data['day-of-week']))
     data["day_y"] = np.cos(np.radians((360/7) * data['day-of-week']))
@@ -92,7 +92,13 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
                                                             'quarter_y': 'mean'
                                                             # 'month': 'mean',
                                                             # 'quarter': 'mean',
-                                                            # 'year': 'mean'
+                                                            'year': 'mean'
                                                             })
 
     return data_agg_by_day
+
+def create_lag_features(data: pd.DataFrame) -> pd.DataFrame:
+
+    data['Max Temp (°C)_prev_day'] = data['Max Temp (°C)'].shift(1)
+    data['Min Temp (°C)_prev_day'] = data['Min Temp (°C)'].shift(1)
+    data['Mean Temp (°C)_prev_day'] = data['Mean Temp (°C)'].shift(1)
