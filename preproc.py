@@ -89,8 +89,8 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
                                                             'month_y': 'mean',
                                                             # 'day-of-year': 'mean',
                                                             'quarter_x': 'mean',
-                                                            'quarter_y': 'mean'
-                                                            # 'month': 'mean',
+                                                            'quarter_y': 'mean',
+                                                            'month': 'mean',
                                                             # 'quarter': 'mean',
                                                             'year': 'mean'
                                                             })
@@ -100,5 +100,20 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
 def create_lag_features(data: pd.DataFrame) -> pd.DataFrame:
 
     data['Max Temp (°C)_prev_day'] = data['Max Temp (°C)'].shift(1)
+    data['Max Temp (°C)_prev_week'] = data['Max Temp (°C)'].shift(7)
+
     data['Min Temp (°C)_prev_day'] = data['Min Temp (°C)'].shift(1)
+    data['Min Temp (°C)_prev_week'] = data['Min Temp (°C)'].shift(7)
+
     data['Mean Temp (°C)_prev_day'] = data['Mean Temp (°C)'].shift(1)
+    data['Mean Temp (°C)_prev_week'] = data['Mean Temp (°C)'].shift(7)
+
+    data['OCCUPANCY_RATE_BEDS_prev_day'] = data['OCCUPANCY_RATE_BEDS'].shift(1)
+    data['OCCUPANCY_RATE_BEDS_prev_dweek'] = data['OCCUPANCY_RATE_BEDS'].shift(7)
+
+
+    return data
+
+# def create_window_features(data: pd.DataFrame) -> pd.DataFrame:
+
+#     data['Occupancy_rate_last_week_avg'] = data['OCCUPANCY_RATE_BEDS'].shift(1).ewm().mean()
