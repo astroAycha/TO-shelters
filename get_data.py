@@ -48,7 +48,7 @@ def update_shelter_data():
 
     data_df = data_df[data_df['OCCUPANCY_DATE'] > today_date]
 
-    data_df.to_csv(f"./data/daily-shelter-overnight-capacity_"+str(today_date)[:10]+".csv")
+    data_df.to_csv(f"./data/daily-shelter-overnight-capacity.csv")
 
 
     return
