@@ -1,58 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def combine_data() -> pd.DataFrame:
 
-    # read the shelter data
-    data_22 = pd.read_csv('./data/daily-shelter-overnight-service-occupancy-capacity-2022.csv')
-    print(data_22.shape)
-    data_22['OCCUPANCY_DATE'] = pd.to_datetime(data_22['OCCUPANCY_DATE'], format='%y-%m-%d')
-
-    data_23 = pd.read_csv('./data/daily-shelter-overnight-service-occupancy-capacity-2023.csv')
-    print(data_23.shape)
-    data_23['OCCUPANCY_DATE'] = pd.to_datetime(data_23['OCCUPANCY_DATE'])
-
-    data_24 = pd.read_csv('./Data/Daily shelter overnight occupancy.csv')
-    print(data_24.shape)
-    data_24['OCCUPANCY_DATE'] = pd.to_datetime(data_24['OCCUPANCY_DATE'])
-
-    input_data = pd.concat([data_22, data_23, data_24], ignore_index=True)
-
-
-    # read weather data for Toronto
-    weather_22 = pd.read_csv('./data/en_climate_daily_ON_6158355_2022_P1D.csv')
-    weather_23 = pd.read_csv('./data/en_climate_daily_ON_6158355_2023_P1D.csv')
-    weather_24 = pd.read_csv('./data/en_climate_daily_ON_6158355_2024_P1D.csv')
-    weather_data = pd.concat([weather_22, weather_23, weather_24])
-    print(f"weather data size: {weather_data.shape}")
-    
-    weather_data['OCCUPANCY_DATE'] = pd.to_datetime(weather_data['Date/Time'])
-
-    full_data = input_data.merge(weather_data, on='OCCUPANCY_DATE', how='left')
-
-    return full_data
-
-
-def split_train_test(full_data: pd.DataFrame,
-                    split_date: str,
-                    city: str = "Toronto") -> (pd.DataFrame, pd.DataFrame):
-
-    # keep only those weather features:
-    weather_features = ['Max Temp (°C)', 'Min Temp (°C)', 'Mean Temp (°C)', 'Total Precip (mm)']
-    # weather_data = weather_data[weather_features+['OCCUPANCY_DATE']]
-
-    # select the city
-    city_filter = full_data['LOCATION_CITY'] == city
-
-    # split into train and test data
-    train_date_filter = full_data['OCCUPANCY_DATE'] < split_date
-    test_date_filter = full_data['OCCUPANCY_DATE'] >= split_date
-
-    train_data = full_data[['OCCUPANCY_DATE', 'OCCUPANCY_RATE_BEDS']+weather_features][city_filter & train_date_filter]
-    test_data = full_data[['OCCUPANCY_DATE', 'OCCUPANCY_RATE_BEDS']+weather_features][city_filter & test_date_filter]
-
-
-    return train_data, test_data
 
 
 def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
@@ -77,10 +26,13 @@ def make_datetime_features(data: pd.DataFrame) -> pd.DataFrame:
 def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
 
     data_agg_by_day = data.groupby('OCCUPANCY_DATE').agg({'OCCUPANCY_RATE_BEDS': 'sum',
-                                                            'Max Temp (°C)': 'max',
-                                                            'Min Temp (°C)': 'min',
-                                                            'Mean Temp (°C)': 'mean',
-                                                            'Total Precip (mm)': 'mean',
+                                                            'temperature_2m_max': 'max',
+                                                            'temperature_2m_min': 'min',
+                                                            'precipitation_sum': 'sum',
+                                                            'rain_sum': 'sum',
+                                                            'snowfall_sum': 'sum',
+                                                            'wind_speed_10m_max': 'max',
+                                                            'sunshine_duration': 'mean',
                                                             # 'day-of-week': 'mean',
                                                             'day_x': 'mean',
                                                             'day_y': 'mean',
@@ -99,14 +51,14 @@ def agg_by_day(data: pd.DataFrame) -> pd.DataFrame:
 
 def create_lag_features(data: pd.DataFrame) -> pd.DataFrame:
 
-    data['Max Temp (°C)_prev_day'] = data['Max Temp (°C)'].shift(1)
-    data['Max Temp (°C)_prev_week'] = data['Max Temp (°C)'].shift(7)
+    data['temperature_2m_max_prev_day'] = data['temperature_2m_max'].shift(1)
+    data['temperature_2m_max_prev_week'] = data['temperature_2m_max'].shift(7)
 
-    data['Min Temp (°C)_prev_day'] = data['Min Temp (°C)'].shift(1)
-    data['Min Temp (°C)_prev_week'] = data['Min Temp (°C)'].shift(7)
+    data['temperature_2m_min_prev_day'] = data['temperature_2m_min'].shift(1)
+    data['temperature_2m_min_prev_week'] = data['temperature_2m_min'].shift(7)
 
-    data['Mean Temp (°C)_prev_day'] = data['Mean Temp (°C)'].shift(1)
-    data['Mean Temp (°C)_prev_week'] = data['Mean Temp (°C)'].shift(7)
+    data['temperature_2m_mean_prev_day'] = data['temperature_2m_mean'].shift(1)
+    data['temperature_2m_mean_prev_week'] = data['temperature_2m_mean'].shift(7)
 
     data['OCCUPANCY_RATE_BEDS_prev_day'] = data['OCCUPANCY_RATE_BEDS'].shift(1)
     data['OCCUPANCY_RATE_BEDS_prev_dweek'] = data['OCCUPANCY_RATE_BEDS'].shift(7)
@@ -117,3 +69,4 @@ def create_lag_features(data: pd.DataFrame) -> pd.DataFrame:
 # def create_window_features(data: pd.DataFrame) -> pd.DataFrame:
 
 #     data['Occupancy_rate_last_week_avg'] = data['OCCUPANCY_RATE_BEDS'].shift(1).ewm().mean()
+
