@@ -182,23 +182,32 @@ def get_weather_data(start_date: str,
 
 def combine_data() -> pd.DataFrame:
 
-    # data2021 = pd.read_csv('./data/shelter_capacity_2021.csv',
-    #                           parse_dates=['OCCUPANCY_DATE'],
-    #                           date_format='%y-%MM-%dd')
+
     data2022 = pd.read_csv('./data/shelter_capacity_2022.csv',
                            parse_dates=['OCCUPANCY_DATE'],
                            date_format='%y-%m-%d')
     data2022['OCCUPANCY_DATE'] = pd.to_datetime(data2022['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
     data2023 = pd.read_csv('./data/shelter_capacity_2023.csv')
+    data2023['OCCUPANCY_DATE'] = pd.to_datetime(data2023['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
     data2024 = pd.read_csv('./data/shelter_capacity_2024.csv')
+    data2024['OCCUPANCY_DATE'] = pd.to_datetime(data2024['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
+    data2025 = pd.read_csv('./data/shelter_capacity_2025.csv')    
+    data2025['OCCUPANCY_DATE'] = pd.to_datetime(data2025['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
+
+
 
     # first stack the shelter data
-    shelter_capacity_data = pd.concat([data2022, data2023, data2024],
+    shelter_capacity_data = pd.concat([data2022, data2023, data2024, data2025],
                                       ignore_index=True)
 
+    packed_shelter_data = shelter_capacity_data.groupby(['SHELTER_ID', 
+                                                         'LOCATION_ID', 
+                                                         'OCCUPANCY_DATE']).agg({'OCCUPANCY_RATE_BEDS': 'mean'})
+    
+    shelter_data = packed_shelter_data.reset_index()
 
-    shelter_capacity_data['OCCUPANCY_DATE'] = pd.to_datetime(shelter_capacity_data['OCCUPANCY_DATE'],
-                                                             format='mixed')
+    shelter_data['OCCUPANCY_DATE'] = pd.to_datetime(shelter_data['OCCUPANCY_DATE'],
+                                                    format='mixed')
 
 
     # read weather data for Toronto
@@ -207,7 +216,7 @@ def combine_data() -> pd.DataFrame:
     
     weather_data['OCCUPANCY_DATE'] = pd.to_datetime(weather_data['date']).dt.date.astype('datetime64[ns]')
 
-    full_data = shelter_capacity_data.merge(weather_data, on='OCCUPANCY_DATE', how='left')
+    full_data = shelter_data.merge(weather_data, on='OCCUPANCY_DATE', how='left')
 
     today_date = datetime.today()
     print(f">>> Today is: {today_date}")
