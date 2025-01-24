@@ -15,13 +15,14 @@ import plotly.graph_objects as go
 data_df = combine_data()
 
 data_df.set_index('OCCUPANCY_DATE', inplace=True)
+data_df['SHELTER_GROUP_LOCATION'] = [str(i)+" - "+str(j) for i,j in zip(data_df['SHELTER_GROUP'],data_df['LOCATION_NAME'])]
 
 # Create the dropdown list to select which time series to plot
-series_options = data_df['LOCATION_ID'].unique()  # Skip the 'Date' column
+series_options = data_df['SHELTER_GROUP_LOCATION'].unique()  # Skip the 'Date' column
 selected_series = st.selectbox("Select a time series to plot", series_options)
 
 id = selected_series
-data = data_df[data_df['LOCATION_ID'] == id]
+data = data_df[data_df['SHELTER_GROUP_LOCATION'] == id]
 data['temperature_2m_max'].fillna(0, inplace=True)
 
 fig = go.Figure()
@@ -52,7 +53,7 @@ fig.add_trace(go.Scatter(x=data.index,
 # Add title and labels
 # Update layout to add a secondary y-axis
 fig.update_layout(
-    title='x',
+    title=id,
     xaxis=dict(
         title='Date',
         rangeslider=dict(visible=True),  # Optional: Add a range slider for the x-axis
