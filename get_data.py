@@ -168,8 +168,9 @@ def get_weather_data(start_date: str,
         "forecast_days": 7
     }
     forecast_dataframe = weather_dataframe(forecast_url, forecast_params)
-    logging.info(f"forecast weather dataframe has size {forecast_dataframe.shape}")
-    print(forecast_dataframe['date'].max())
+    logging.info(f"weather forecast dataframe has size {forecast_dataframe.shape}")
+    # logging.info("CHECKING WHY THIS IS NOT UPDATING")
+    logging.info(f"weather forecast dates: {forecast_dataframe['date'].min()} {forecast_dataframe['date'].max()}")
 
     daily_weather_dataframe = pd.concat([hist_dataframe, forecast_dataframe], 
                                         ignore_index=True)
@@ -201,8 +202,11 @@ def combine_data() -> pd.DataFrame:
                                       ignore_index=True)
 
     packed_shelter_data = shelter_capacity_data.groupby(['SHELTER_ID', 
-                                                         'LOCATION_ID', 
-                                                         'OCCUPANCY_DATE']).agg({'OCCUPANCY_RATE_BEDS': 'mean'})
+                                                     'LOCATION_ID',
+                                                     'ORGANIZATION_NAME',
+                                                     'SHELTER_GROUP',
+                                                     'LOCATION_NAME',
+                                                     'OCCUPANCY_DATE']).agg({'OCCUPANCY_RATE_BEDS': 'mean'})
     
     shelter_data = packed_shelter_data.reset_index()
 
@@ -216,7 +220,7 @@ def combine_data() -> pd.DataFrame:
     
     weather_data['OCCUPANCY_DATE'] = pd.to_datetime(weather_data['date']).dt.date.astype('datetime64[ns]')
 
-    full_data = shelter_data.merge(weather_data, on='OCCUPANCY_DATE', how='left')
+    full_data = shelter_data.merge(weather_data, on='OCCUPANCY_DATE', how='outer')
 
     today_date = datetime.today()
     print(f">>> Today is: {today_date}")
