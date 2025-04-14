@@ -13,7 +13,7 @@ logging.basicConfig(filename='shelter_data.log', level=logging.INFO)
 
 
 
-def download_hist_shelter_capacity_data():
+def download_hist_shelter_capacity_data(data_path:str):
 
     base_url = 'https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/'
 
@@ -28,7 +28,7 @@ def download_hist_shelter_capacity_data():
         response = requests.get(file_url)
 
         if response.status_code == 200:
-            file_name = f"./data/shelter_capacity_{year}.csv"
+            file_name = f"{data_path}shelter_capacity_{year}.csv"
 
             with open(file_name, "wb") as file:
                 file.write(response.content)
@@ -40,7 +40,7 @@ def download_hist_shelter_capacity_data():
     return
 
 
-def update_shelter_data():
+def update_shelter_data(data_path:str):
 
     """
     obtain the shelter data and update for the current week
@@ -51,14 +51,21 @@ def update_shelter_data():
     base_url = "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/"
     file_url = base_url + "42714176-4f05-44e6-b157-2b57f29b856a"
 
+    logging.info(f'Retrieving data from {file_url}')
+
     # Send a GET request to the URL
-    response = requests.get(file_url)
+    response = requests.get(file_url, timeout=10)
+
+    logging.info(f"response status code {response.status_code}")
 
     today = datetime.today()
+    logging.info(f"Today is {today}")
+
     # Check if the request was successful
     if response.status_code == 200:
         # Specify the filename you want to save the file as
-        file_name = "./data/shelter_capacity_2025.csv"
+        file_name = f"{data_path}shelter_capacity_2025.csv"
+        logging.info(f"Writing data to file {file_name}")
         
         # Open a local file and write the content to it
         with open(file_name, "wb") as file:
@@ -124,7 +131,8 @@ def weather_dataframe(url, params):
 
 
 def get_weather_data(start_date: str,
-                     end_date: str) -> pd.DataFrame:
+                     end_date: str,
+                     data_path: str) -> pd.DataFrame:
 
     '''
     get historic weather data and forecast data
@@ -164,74 +172,18 @@ def get_weather_data(start_date: str,
         "longitude": toronto_longitude,
         "daily": daily_params,
         "timezone": "America/New_York",
-        "past_days":0,
-        "forecast_days": 7
+        # "past_days":0,
+        # "forecast_days": 7
     }
     forecast_dataframe = weather_dataframe(forecast_url, forecast_params)
-    logging.info(f"weather forecast dataframe has size {forecast_dataframe.shape}")
-    # logging.info("CHECKING WHY THIS IS NOT UPDATING")
-    logging.info(f"weather forecast dates: {forecast_dataframe['date'].min()} {forecast_dataframe['date'].max()}")
+    logging.info(f"forecast weather dataframe has size {forecast_dataframe.shape}")
+    logging.info(f"max date: {forecast_dataframe['date'].max()}")
 
     daily_weather_dataframe = pd.concat([hist_dataframe, forecast_dataframe], 
                                         ignore_index=True)
  
 
-    daily_weather_dataframe.to_csv(f"./data/daily_weather_data.csv",
+    daily_weather_dataframe.to_csv(f"{data_path}daily_weather_data.csv",
                                    index=False)
 
     return
-
-def combine_data() -> pd.DataFrame:
-
-
-    data2022 = pd.read_csv('./data/shelter_capacity_2022.csv',
-                           parse_dates=['OCCUPANCY_DATE'],
-                           date_format='%y-%m-%d')
-    data2022['OCCUPANCY_DATE'] = pd.to_datetime(data2022['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
-    data2023 = pd.read_csv('./data/shelter_capacity_2023.csv')
-    data2023['OCCUPANCY_DATE'] = pd.to_datetime(data2023['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
-    data2024 = pd.read_csv('./data/shelter_capacity_2024.csv')
-    data2024['OCCUPANCY_DATE'] = pd.to_datetime(data2024['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
-    data2025 = pd.read_csv('./data/shelter_capacity_2025.csv')    
-    data2025['OCCUPANCY_DATE'] = pd.to_datetime(data2025['OCCUPANCY_DATE']).dt.strftime('%Y-%m-%d')
-
-
-
-    # first stack the shelter data
-    shelter_capacity_data = pd.concat([data2022, data2023, data2024, data2025],
-                                      ignore_index=True)
-
-    packed_shelter_data = shelter_capacity_data.groupby(['SHELTER_ID', 
-                                                     'LOCATION_ID',
-                                                     'ORGANIZATION_NAME',
-                                                     'SHELTER_GROUP',
-                                                     'LOCATION_NAME',
-                                                     'OCCUPANCY_DATE']).agg({'OCCUPANCY_RATE_BEDS': 'mean'})
-    
-    shelter_data = packed_shelter_data.reset_index()
-
-    shelter_data['OCCUPANCY_DATE'] = pd.to_datetime(shelter_data['OCCUPANCY_DATE'],
-                                                    format='mixed')
-
-
-    # read weather data for Toronto
-    weather_data = pd.read_csv('./data/daily_weather_data.csv')
-    print(f">>> weather data size: {weather_data.shape}")
-    
-    weather_data['OCCUPANCY_DATE'] = pd.to_datetime(weather_data['date']).dt.date.astype('datetime64[ns]')
-
-    full_data = shelter_data.merge(weather_data, on='OCCUPANCY_DATE', how='outer')
-
-    today_date = datetime.today()
-    print(f">>> Today is: {today_date}")
-
-    full_data = full_data[
-                        # (full_data['OCCUPANCY_DATE'] < today_date) 
-                    #   & 
-                      (full_data['OCCUPANCY_DATE'] > today_date - timedelta(days=1200))
-                      ]
-
-    full_data.to_csv(f"./data/daily-shelter-overnight-capacity.csv",
-                   index=False)
-
-    return full_data
