@@ -5,14 +5,11 @@ import seaborn as sns
 sns.set_style("darkgrid")
 sns.set_palette("dark")
 
-from get_data import combine_data
-
-
 import streamlit as st
 import plotly.graph_objects as go
 
 
-data_df = combine_data()
+data_df = pd.read_csv('/Users/aycha.tammour/toronto-shelters/data/daily-shelter-overnight-capacity.csv')
 
 data_df.set_index('OCCUPANCY_DATE', inplace=True)
 data_df['SHELTER_GROUP_LOCATION'] = [str(i)+" - "+str(j) for i,j in zip(data_df['SHELTER_GROUP'],data_df['LOCATION_NAME'])]
